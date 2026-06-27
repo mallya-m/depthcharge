@@ -31,7 +31,7 @@ export default function InputBar({ graphRef }) {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-10 bg-zinc-900 border-b border-zinc-800 px-6 py-3">
+    <div className="bg-zinc-900 border-b border-zinc-800 px-6 py-3">
       <div className="flex gap-3 items-center">
         {/* Logo */}
         <span className="text-white font-bold text-lg shrink-0">
@@ -59,11 +59,19 @@ export default function InputBar({ graphRef }) {
           {loading ? "Analyzing..." : "Analyze"}
         </button>
 
-        {/* Divider */}
-        <div className="w-px h-6 bg-zinc-700 shrink-0" />
-
-        <SearchBar graphRef={graphRef} />
+        {/* Search only shows after a repo is loaded */}
+        <SearchBarConditional graphRef={graphRef} />
       </div>
     </div>
+  );
+}
+function SearchBarConditional({ graphRef }) {
+  const { graph } = useGraphStore();
+  if (!graph) return null;
+  return (
+    <>
+      <div className="w-px h-6 bg-zinc-700 shrink-0" />
+      <SearchBar graphRef={graphRef} />
+    </>
   );
 }

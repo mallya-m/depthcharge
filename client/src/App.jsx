@@ -7,19 +7,36 @@ import FilterPanel from "./components/FilterPanel";
 import Legend from "./components/Legend";
 
 export default function App() {
-  // graphRef lives here so both InputBar (search) and GraphView (click) can use it
   const graphRef = useRef();
 
   return (
-    <div className="h-screen bg-zinc-950 overflow-hidden">
-      <InputBar graphRef={graphRef} />
-      <StatsSidebar />
-      <div className="h-full pt-16 pl-64">
-        <GraphView graphRef={graphRef} />
+    <div className="h-screen bg-zinc-950 overflow-hidden flex flex-col">
+
+      {/* Top bar — fixed height */}
+      <div className="shrink-0">
+        <InputBar graphRef={graphRef} />
       </div>
-      <NodePanel />
+
+      {/* Body row — sidebar + graph side by side */}
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* Left sidebar */}
+        <StatsSidebar />
+
+        {/* Graph — fills remaining space */}
+        <div className="flex-1 relative overflow-hidden">
+          <GraphView graphRef={graphRef} />
+          <Legend />
+        </div>
+
+        {/* Right node panel */}
+        <NodePanel />
+
+      </div>
+
+      {/* Bottom filter bar */}
       <FilterPanel />
-      <Legend />
+
     </div>
   );
 }

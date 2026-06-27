@@ -23,7 +23,7 @@ export default function FilterPanel() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
         // Floating panel — bottom center of the screen
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20"
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20"
       >
         <div className="flex gap-2 bg-zinc-900/90 backdrop-blur border border-zinc-800 rounded-xl px-4 py-3 shadow-xl">
           {FILTERS.map((filter) => {

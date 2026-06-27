@@ -21,12 +21,8 @@ export default function SearchBar({ graphRef }) {
     setSearchQuery("");
     setOpen(false);
 
-    if (graphRef?.current && node.x !== undefined) {
-      graphRef.current.cameraPosition(
-        { x: node.x * 1.5, y: node.y * 1.5, z: node.z * 1.5 },
-        node,
-        1000
-      );
+    if (graphRef?.current) {
+      setTimeout(() => graphRef.current?.zoomToFit(800, 100), 400);
     }
   }
 

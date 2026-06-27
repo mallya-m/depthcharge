@@ -1,5 +1,3 @@
-// Legend.jsx
-// Small legend in top-right of the graph area explaining node colors
 
 import useGraphStore from "../store/useGraphStore";
 
@@ -15,7 +13,7 @@ export default function Legend() {
   if (!graph) return null;
 
   return (
-    <div className="fixed top-20 right-4 z-10 bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-lg p-3">
+    <div className="absolute top-4 right-4 z-10 bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-lg p-3">
       <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">Legend</p>
       <div className="space-y-1.5">
         {ITEMS.map((item) => (

@@ -20,7 +20,7 @@ export default function NodePanel() {
   const meta = COLOR_META[selectedNode.color] || COLOR_META.green;
 
   return (
-    <div className="fixed top-0 right-0 h-full w-80 bg-zinc-900 border-l border-zinc-800 z-20 overflow-y-auto">
+    <div className="w-80 shrink-0 bg-zinc-900 border-l border-zinc-800 overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-zinc-800">
         <h2 className="text-white font-semibold text-sm">File Details</h2>

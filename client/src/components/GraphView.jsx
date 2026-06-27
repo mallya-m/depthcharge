@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 import ForceGraph3D from "react-force-graph-3d";
 import useGraphStore from "../store/useGraphStore";
 import axios from "axios";
@@ -16,18 +16,20 @@ export default function GraphView({ graphRef }) {
     cached, getFilteredGraph, focusedNode, setFocusedNode
   } = useGraphStore();
 
-  const graphRef = useRef();
+  const [is2D, setIs2D] = useState(false);
 
   const handleNodeClick = useCallback((node) => {
     setSelectedNode(node);
-    setFocusedNode(focusedNode?.id === node.id ? null : node);
+    const isAlreadyFocused = focusedNode?.id === node.id;
+    setFocusedNode(isAlreadyFocused ? null : node);
 
     if (graphRef.current) {
-      graphRef.current.cameraPosition(
-        { x: node.x * 1.5, y: node.y * 1.5, z: node.z * 1.5 },
-        node,
-        1000
-      );
+      if (isAlreadyFocused) {
+        setTimeout(() => graphRef.current?.zoomToFit(800, 100), 100);
+      } else {
+        // just fit — no manual cameraPosition, avoids the 10000x zoom bug
+        setTimeout(() => graphRef.current?.zoomToFit(800, 100), 400);
+      }
     }
   }, [setSelectedNode, setFocusedNode, focusedNode]);
 
@@ -58,7 +60,7 @@ export default function GraphView({ graphRef }) {
 
   if (!graph) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-12">
+      <div className="flex flex-col items-center justify-center h-full gap-12 overflow-y-auto py-8">
 
         {/* Illustration */}
         <div className="flex flex-col items-center gap-4">
@@ -139,19 +141,40 @@ export default function GraphView({ graphRef }) {
         </div>
       )}
 
-      {/* Reset camera */}
-      <button
-        onClick={() => graphRef.current?.cameraPosition(
-          { x: 0, y: 0, z: 300 }, { x: 0, y: 0, z: 0 }, 1000
-        )}
-        className="absolute top-4 right-4 z-10 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-400 text-xs px-3 py-1.5 rounded-lg transition"
-      >
-        Reset Camera
-      </button>
+      {/* Camera controls */}
+      <div className="absolute bottom-16 right-4 z-10 flex gap-2">
+        <button
+          onClick={() => setIs2D(prev => !prev)}
+          className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-400 text-xs px-3 py-1.5 rounded-lg transition"
+        >
+          {is2D ? "3D View" : "2D View"}
+        </button>
+        <button
+          onClick={() => {
+            if (!graphRef.current) return;
+            // Fit all visible nodes into view
+            graphRef.current.zoomToFit(800, 80);
+          }}
+          className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-400 text-xs px-3 py-1.5 rounded-lg transition"
+        >
+          Fit View
+        </button>
+        <button
+          onClick={() => {
+            if (!graphRef.current) return;
+            graphRef.current.cameraPosition(
+              { x: 0, y: 0, z: 500 }, { x: 0, y: 0, z: 0 }, 800
+            );
+          }}
+          className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-400 text-xs px-3 py-1.5 rounded-lg transition"
+        >
+          Reset
+        </button>
+      </div>
 
       {/* Cached badge */}
       {cached && (
-        <div className="absolute top-4 left-4 z-10 bg-zinc-800 border border-zinc-700 text-zinc-400 text-xs px-3 py-1 rounded-full">
+        <div className="absolute bottom-16 left-4 z-10 bg-zinc-800 border border-zinc-700 text-zinc-400 text-xs px-3 py-1 rounded-full">
           Cached result
         </div>
       )}
@@ -207,6 +230,14 @@ export default function GraphView({ graphRef }) {
         }}
         enableNodeDrag={true}
         enableNavigationControls={true}
+        numDimensions={is2D ? 2 : 3}
+        enablePointerInteraction={true}
+        // In 2D mode fit the view once after switching
+        onEngineStop={() => {
+          if (is2D && graphRef.current) {
+            graphRef.current.zoomToFit(400, 80);
+          }
+        }}
         linkDirectionalParticles={(link) => {
           const src = link.source?.id || link.source;
           const sourceNode = graph.nodes.find(n => n.id === src);

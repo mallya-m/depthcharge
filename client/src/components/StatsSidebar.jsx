@@ -10,13 +10,8 @@ export default function StatsSidebar() {
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        transition={{ duration: 0.3 }}
-
-        className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-zinc-900 border-r border-zinc-800 z-10 overflow-y-auto"
+      <div
+        className="w-64 shrink-0 bg-zinc-900 border-r border-zinc-800 overflow-y-auto"
       >
         <div className="p-4 space-y-5">
 
@@ -115,7 +110,7 @@ export default function StatsSidebar() {
           )}
 
         </div>
-      </motion.div>
+      </div>
     </AnimatePresence>
   );
 }

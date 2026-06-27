@@ -3,7 +3,7 @@ const express = require("express");
 const multer = require("multer");
 const AdmZip = require("adm-zip");
 const { parseFiles } = require("../services/parserService");
-
+const { buildGraph } = require("../services/graphService");
 const router = express.Router();
 
 const upload = multer({
@@ -45,12 +45,9 @@ router.post("/zip", upload.single("zipfile"), async (req, res) => {
             content: zip.readAsText(entry),
         }));
         const parsedFiles = parseFiles(jsFiles);
-
-        res.json({
-        success: true,
-        fileCount: parsedFiles.length,
-        files: parsedFiles,
-        });
+        const graph = buildGraph(parsedFiles);
+        
+        res.json({ success: true, graph }); 
 
     }catch (error) {
         console.error("Zip processing error:", error.message);

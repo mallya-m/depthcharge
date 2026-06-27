@@ -10,7 +10,7 @@ const NODE_COLORS = {
   grey:   "#71717a",
 };
 
-export default function GraphView() {
+export default function GraphView({ graphRef }) {
   const {
     graph, loading, error, setSelectedNode,
     cached, getFilteredGraph, focusedNode, setFocusedNode
@@ -58,28 +58,62 @@ export default function GraphView() {
 
   if (!graph) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center space-y-3">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="1.5">
-              <circle cx="12" cy="12" r="3"/>
-              <circle cx="4" cy="6" r="2"/>
-              <circle cx="20" cy="6" r="2"/>
-              <circle cx="4" cy="18" r="2"/>
-              <circle cx="20" cy="18" r="2"/>
-              <line x1="6" y1="6" x2="10" y2="11"/>
-              <line x1="18" y1="6" x2="14" y2="11"/>
-              <line x1="6" y1="18" x2="10" y2="13"/>
-              <line x1="18" y1="18" x2="14" y2="13"/>
-            </svg>
-          </div>
-          <p className="text-zinc-300 font-medium">Visualize any codebase</p>
-          <p className="text-zinc-500 text-sm">Paste a public GitHub URL above and hit Analyze</p>
-          <div className="flex gap-2 justify-center mt-4">
-            <ExampleBadge url="https://github.com/expressjs/express" />
-            <ExampleBadge url="https://github.com/axios/axios" />
+      <div className="flex flex-col items-center justify-center h-full gap-12">
+
+        {/* Illustration */}
+        <div className="flex flex-col items-center gap-4">
+          <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
+            {/* Central node */}
+            <circle cx="60" cy="40" r="8" fill="#10b981" opacity="0.9"/>
+            {/* Surrounding nodes */}
+            <circle cx="20" cy="20" r="5" fill="#10b981" opacity="0.5"/>
+            <circle cx="100" cy="20" r="5" fill="#ef4444" opacity="0.6"/>
+            <circle cx="15" cy="60" r="4" fill="#10b981" opacity="0.3"/>
+            <circle cx="105" cy="60" r="4" fill="#10b981" opacity="0.4"/>
+            <circle cx="60" cy="8" r="4" fill="#eab308" opacity="0.5"/>
+            <circle cx="40" cy="68" r="3" fill="#10b981" opacity="0.3"/>
+            <circle cx="85" cy="68" r="3" fill="#10b981" opacity="0.3"/>
+            {/* Edges */}
+            <line x1="52" y1="35" x2="24" y2="23" stroke="#3f3f46" strokeWidth="1.2"/>
+            <line x1="68" y1="35" x2="96" y2="23" stroke="#3f3f46" strokeWidth="1.2"/>
+            <line x1="52" y1="44" x2="18" y2="57" stroke="#3f3f46" strokeWidth="1.2"/>
+            <line x1="68" y1="44" x2="102" y2="57" stroke="#3f3f46" strokeWidth="1.2"/>
+            <line x1="60" y1="32" x2="60" y2="12" stroke="#3f3f46" strokeWidth="1.2"/>
+            <line x1="55" y1="47" x2="42" y2="65" stroke="#3f3f46" strokeWidth="1.2"/>
+            <line x1="65" y1="47" x2="83" y2="65" stroke="#3f3f46" strokeWidth="1.2"/>
+          </svg>
+          <p className="text-zinc-300 font-medium text-base">Paste any public GitHub repo URL to begin</p>
+          <p className="text-zinc-600 text-sm">See how every file connects — imports, dependencies, circular paths</p>
+        </div>
+
+        {/* Quick launch cards */}
+        <div className="flex flex-col items-center gap-3">
+          <p className="text-zinc-600 text-xs uppercase tracking-widest">Or try an example</p>
+          <div className="flex gap-3 flex-wrap justify-center">
+            <ExampleCard
+              url="https://github.com/expressjs/express"
+              name="expressjs / express"
+              description="Minimal Node.js web framework"
+              files="~50 files"
+              color="#10b981"
+            />
+            <ExampleCard
+              url="https://github.com/axios/axios"
+              name="axios / axios"
+              description="Promise-based HTTP client"
+              files="~40 files"
+              color="#10b981"
+            />
+            <ExampleCard
+              url="https://github.com/jonschlinkert/gray-matter"
+              name="jonschlinkert / gray-matter"
+              description="YAML front-matter parser"
+              files="~15 files"
+              color="#10b981"
+            />
           </div>
         </div>
+
       </div>
     );
   }
@@ -224,6 +258,50 @@ function ExampleBadge({ url }) {
       className="text-xs px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-400 rounded-lg transition"
     >
       Try {name}
+    </button>
+  );
+}
+function ExampleCard({ url, name, description, files, color }) {
+  const { setGraph, setLoading, setError, setCached, reset } = useGraphStore();
+
+  async function handleClick() {
+    reset();
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/github/crawl`,
+        { repoUrl: url }
+      );
+      setGraph(response.data.graph);
+      setCached(response.data.cached);
+    } catch {
+      setError("Failed to analyze repo");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      className="group w-52 text-left bg-zinc-900/60 hover:bg-zinc-800/80 border border-zinc-800 hover:border-zinc-600 rounded-xl p-4 transition-all duration-200"
+    >
+      {/* Dot + repo name */}
+      <div className="flex items-center gap-2 mb-2">
+        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+        <span className="text-zinc-300 text-xs font-medium font-mono truncate">{name}</span>
+      </div>
+
+      {/* Description */}
+      <p className="text-zinc-500 text-xs leading-relaxed mb-3">{description}</p>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between">
+        <span className="text-zinc-700 text-xs">{files}</span>
+        <span className="text-zinc-600 group-hover:text-emerald-400 text-xs transition">
+          Analyze
+        </span>
+      </div>
     </button>
   );
 }

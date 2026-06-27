@@ -2,6 +2,8 @@ const express = require('express')
 const { crawlRepo } = require("../services/githubService");
 const { parseFiles } = require("../services/parserService");
 const { buildGraph } = require("../services/graphService");
+const Graph = require("../models/Graph");
+
 const router = express.Router();
 
 router.post("/crawl", async (req, res) =>{
@@ -12,13 +14,26 @@ router.post("/crawl", async (req, res) =>{
         });
     }
     try{
+        const cached = await Graph.findOne({ sourceKey: repoUrl });
+        if (cached) {
+            console.log("Cache hit for:", repoUrl);
+            return res.json({
+                success: true,
+                graph: cached.graph,
+                cached: true,
+                parsedAt: cached.parsedAt,
+            });
+        }
+        console.log("Cache miss, crawling:", repoUrl);
         const files = await crawlRepo(repoUrl);
         const parsedFiles = parseFiles(files);
-        console.log("Files crawled:", files.length);
-        console.log("Parsed files:", parsedFiles.length);
-        console.log("Sample parsed file:", JSON.stringify(parsedFiles[0], null, 2));
         const graph = buildGraph(parsedFiles);
-        res.json({ success: true, graph });
+        await Graph.create({
+            sourceKey: repoUrl,
+            graph,
+            parsedAt: new Date(),
+        });
+        res.json({ success: true, graph, cached: false });
 
     }catch (error) {
     console.error("Crawl error:", error.message);

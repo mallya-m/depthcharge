@@ -4,6 +4,8 @@ const multer = require("multer");
 const AdmZip = require("adm-zip");
 const { parseFiles } = require("../services/parserService");
 const { buildGraph } = require("../services/graphService");
+const Graph = require("../models/Graph");
+
 const router = express.Router();
 
 const upload = multer({
@@ -17,13 +19,22 @@ const upload = multer({
     }
   },
 });
-// POST /api/upload/zip
+
 router.post("/zip", upload.single("zipfile"), async (req, res) => {
     if (!req.file) {
         return res.status(400).json({ error: "No zip file uploaded" });
     }
-
+    const sourceKey = `zip:${req.file.originalname}`;
     try {
+        const cached = await Graph.findOne({ sourceKey });
+        if (cached) {
+            return res.json({
+                success: true,
+                graph: cached.graph,
+                cached: true,
+                parsedAt: cached.parsedAt,
+            });
+        }
         const zip = new AdmZip(req.file.buffer);
         const zipEntries = zip.getEntries();
 
@@ -47,7 +58,9 @@ router.post("/zip", upload.single("zipfile"), async (req, res) => {
         const parsedFiles = parseFiles(jsFiles);
         const graph = buildGraph(parsedFiles);
         
-        res.json({ success: true, graph }); 
+        await Graph.create({ sourceKey, graph, parsedAt: new Date() });
+
+        res.json({ success: true, graph, cached: false });
 
     }catch (error) {
         console.error("Zip processing error:", error.message);

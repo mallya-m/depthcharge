@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 
 require("dotenv").config();
+const connectDB = require("./db"); 
 
 const githubRoutes = require('./routes/github');
 const uploadRoutes = require("./routes/upload");
@@ -19,6 +20,8 @@ app.use("/api/upload", uploadRoutes);
 app.get("/",(req,res)=>{
     res.json({message: "DepthCharge is alive."});
 });
-app.listen(PORT,() =>{
+connectDB().then(() => {
+  app.listen(PORT, () => {
     console.log(`DepthCharge backend running on http://localhost:${PORT}`);
+  });
 });

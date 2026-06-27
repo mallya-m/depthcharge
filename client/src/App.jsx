@@ -1,14 +1,8 @@
-// App.jsx — the root component. Everything you see on screen starts here.
-
-import { useState } from "react"; // lets this component remember values between renders
+import { useState } from "react";
 
 function App() {
-  // backendMessage holds whatever text the backend sends us.
-  // setBackendMessage is the only way we're allowed to change it.
   const [backendMessage, setBackendMessage] = useState("Not connected yet");
 
-  // This function runs when the button is clicked.
-  // It "asks" our backend server for data and stores the answer.
   async function pingBackend() {
     try {
       const response = await fetch("http://localhost:5000/");

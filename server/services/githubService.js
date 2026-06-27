@@ -52,7 +52,8 @@ async function crawlRepo(repoUrl) {
 
   const filesWithContent = await Promise.all(
     jsFiles.map(async (file) => {
-      const content = await fetchFileContent(file.url);
+      const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/HEAD/${file.path}`;
+      const content = await fetchFileContent(rawUrl);
       return content ? { path: file.path, content } : null;
     })
   );
